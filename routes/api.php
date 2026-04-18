@@ -51,6 +51,8 @@ Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
         Route::patch('/items/{id}', [CartController::class, 'updateItem']);
         Route::delete('/items/{id}', [CartController::class, 'removeItem']);
         Route::delete('/clear', [CartController::class, 'clear']);
+
+        Route::get('/count', [CartController::class, 'count']);
     });
     // Orders
     Route::post('/orders', [OrderController::class, 'store']);

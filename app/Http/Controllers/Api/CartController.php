@@ -127,4 +127,14 @@ class CartController extends Controller
 
         return $this->deleted('Cart cleared successfully');
     }
+
+    public function count()
+{
+    $count = CartItem::where('user_id', auth()->id())
+        ->sum('quantity');
+
+    return response()->json([
+        'count' => $count
+    ]);
+}
 }
