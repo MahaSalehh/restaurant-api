@@ -67,7 +67,9 @@ Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
 });
 
 // Admin Routes
-Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::prefix('admin')
+->name('admin.')
+->middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Users
     Route::get('/users', [UserController::class, 'allUsers']);
     Route::put('/users/{user}/role', [UserController::class, 'updateRole']);
