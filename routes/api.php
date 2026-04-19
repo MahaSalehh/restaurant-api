@@ -77,7 +77,7 @@ Route::prefix('admin')
     Route::post('/users/{user}/restore', [UserController::class, 'restore']);
 
     // Categories
-    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('admin/categories', CategoryController::class);
 
     // Menu Items
     Route::apiResource('menu-items', MenuItemController::class);
