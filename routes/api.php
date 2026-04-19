@@ -14,6 +14,11 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\NotificationController;
 
+
+Route::get('/', function () {
+    return response()->json(['status' => 'API is working']);
+});
+
 // Public Routes
 
 // Auth
