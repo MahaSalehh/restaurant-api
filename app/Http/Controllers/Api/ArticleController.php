@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ArticleController extends Controller
 {
@@ -27,17 +28,20 @@ class ArticleController extends Controller
             'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
-        if ($request->hasFile('image_url')) {
-            $imagePath = $request->file('image_url')->store('articles', 'public');
-            $data['image_url'] = $imagePath;
-        }
+         if ($request->hasFile('image_url')) {
+        $uploadedImage = Cloudinary::upload(
+            $request->file('image_url')->getRealPath()
+        )->getSecurePath();
 
-        $data['author_id'] = Auth::id();
-
-        $article = Article::create($data);
-
-        return $this->created("Article created successfully", $article);
+        $data['image_url'] = $uploadedImage;
     }
+
+    $data['author_id'] = Auth::id();
+
+    $article = Article::create($data);
+
+    return $this->created("Article created successfully", $article);
+}
 
     public function show(Article $article)
     {

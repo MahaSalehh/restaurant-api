@@ -7,6 +7,7 @@ use App\Models\MenuItem;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class MenuItemController extends Controller
 {
@@ -33,11 +34,16 @@ class MenuItemController extends Controller
             'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
         if ($request->hasFile('image_url')) {
-            $imagePath = $request->file('image_url')->store('menu_items', 'public');
-            $data['image_url'] = $imagePath;
-        }
-        $menuItem = MenuItem::create($data);
-        return $this->created("Menu Item added successfully", $menuItem);
+        $uploadedFileUrl = Cloudinary::upload(
+            $request->file('image_url')->getRealPath()
+        )->getSecurePath();
+
+        $data['image_url'] = $uploadedFileUrl;
+    }
+
+    $menuItem = MenuItem::create($data);
+
+    return $this->created("Menu Item added successfully", $menuItem);
     }
 
     /**
