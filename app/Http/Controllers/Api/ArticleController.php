@@ -49,36 +49,40 @@ class ArticleController extends Controller
     }
 
     public function update(Request $request, Article $article)
-    {
-        $data = $request->validate([
-            'title' => 'sometimes|string',
-            'content' => 'sometimes|string',
-            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
-        ]);
+{
+    $data = $request->validate([
+        'title' => 'sometimes|string',
+        'content' => 'sometimes|string',
+        'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+    ]);
 
-        if ($request->hasFile('image_url')) {
+    if ($request->hasFile('image_url')) {
 
-            if ($article->image_url) {
-                Storage::disk('public')->delete($article->image_url);
-            }
-
-            $imagePath = $request->file('image_url')->store('articles', 'public');
-            $data['image_url'] = $imagePath;
+        if ($article->public_id) {
+            Cloudinary::destroy($article->public_id);
         }
 
-        $article->update($data);
+        $uploaded = Cloudinary::upload(
+            $request->file('image_url')->getRealPath()
+        );
 
-        return $this->success("Article updated successfully", $article);
+        $data['image_url'] = $uploaded->getSecurePath();
+        $data['public_id'] = $uploaded->getPublicId();
     }
+
+    $article->update($data);
+
+    return $this->success("Article updated successfully", $article);
+}
 
     public function destroy(Article $article)
-    {
-        if ($article->image_url) {
-            Storage::disk('public')->delete($article->image_url);
-        }
-
-        $article->delete();
-
-        return $this->deleted("Article deleted successfully");
+{
+    if ($article->public_id) {
+        Cloudinary::destroy($article->public_id);
     }
+
+    $article->delete();
+
+    return $this->deleted("Article deleted successfully");
+}
 }

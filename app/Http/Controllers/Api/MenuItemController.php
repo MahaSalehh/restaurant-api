@@ -59,34 +59,45 @@ class MenuItemController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, MenuItem $menuItem)
-    {
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|nullable|string',
-            'price' => 'sometimes|numeric',
-            'category_id' => 'sometimes|exists:categories,id',
-            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
-        ]);
-        if ($request->hasFile('image_url')) {
-            if ($menuItem->image_url) {
-                Storage::disk('public')->delete($menuItem->image_url);
-            }
-            $imagePath = $request->file('image_url')->store('menu_items', 'public');
-            $data['image_url'] = $imagePath;
+{
+    $data = $request->validate([
+        'name' => 'sometimes|string|max:255',
+        'description' => 'sometimes|nullable|string',
+        'price' => 'sometimes|numeric',
+        'category_id' => 'sometimes|exists:categories,id',
+        'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+    ]);
+
+    if ($request->hasFile('image_url')) {
+
+        if ($menuItem->public_id) {
+            Cloudinary::destroy($menuItem->public_id);
         }
-        $menuItem->update($data);
-        return $this->success("Menu Item updated successfully", $menuItem);
+
+        $uploaded = Cloudinary::upload(
+            $request->file('image_url')->getRealPath()
+        );
+
+        $data['image_url'] = $uploaded->getSecurePath();
+        $data['public_id'] = $uploaded->getPublicId();
     }
+
+    $menuItem->update($data);
+
+    return $this->success("Menu Item updated successfully", $menuItem);
+}
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(MenuItem $menuItem)
-    {
-        if ($menuItem->image_url) {
-            Storage::disk('public')->delete($menuItem->image_url);
-        }
-        $menuItem->delete();
-        return $this->deleted("Menu Item deleted successfully", $menuItem);
+{
+    if ($menuItem->public_id) {
+        Cloudinary::destroy($menuItem->public_id);
     }
+
+    $menuItem->delete();
+
+    return $this->deleted("Menu Item deleted successfully", $menuItem);
+}
 }
