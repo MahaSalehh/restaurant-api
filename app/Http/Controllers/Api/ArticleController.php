@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use Illuminate\Support\Facades\Storage;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ArticleController extends Controller
 {
@@ -24,17 +24,12 @@ class ArticleController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
-            'image_url' => 'nullable|file|image|max:2048'
+            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($request->hasFile('image_url')) {
-
-            $uploaded = Cloudinary::upload(
-                $request->file('image_url')->getRealPath()
-            );
-
-            $data['image_url'] = $uploaded->getSecurePath();
-            $data['public_id'] = $uploaded->getPublicId(); // 🔥 مهم جدًا
+            $imagePath = $request->file('image_url')->store('articles', 'public');
+            $data['image_url'] = $imagePath;
         }
 
         $data['author_id'] = Auth::id();
@@ -54,21 +49,17 @@ class ArticleController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|string',
             'content' => 'sometimes|string',
-            'image_url' => 'nullable|file|image|max:2048'
+            'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($request->hasFile('image_url')) {
 
-            if ($article->public_id) {
-                Cloudinary::destroy($article->public_id);
+            if ($article->image_url) {
+                Storage::disk('public')->delete($article->image_url);
             }
 
-            $uploaded = Cloudinary::upload(
-                $request->file('image_url')->getRealPath()
-            );
-
-            $data['image_url'] = $uploaded->getSecurePath();
-            $data['public_id'] = $uploaded->getPublicId();
+            $imagePath = $request->file('image_url')->store('articles', 'public');
+            $data['image_url'] = $imagePath;
         }
 
         $article->update($data);
@@ -78,8 +69,8 @@ class ArticleController extends Controller
 
     public function destroy(Article $article)
     {
-        if ($article->public_id) {
-            Cloudinary::destroy($article->public_id);
+        if ($article->image_url) {
+            Storage::disk('public')->delete($article->image_url);
         }
 
         $article->delete();
