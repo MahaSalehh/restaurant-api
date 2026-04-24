@@ -28,12 +28,23 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'sometimes|string|max:255|min:2',
-            'email' => 'sometimes|email||regex:/^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/|unique:users,email,' . $user->id,
-            'phone' => 'sometimes|string|regex:/^\+?\d{10,15}$/',
+            'email' => [
+                'sometimes',
+                'email',
+                'regex:/^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$/',
+                'unique:users,email,' . $user->id
+            ],
+            'phone' => [
+                'sometimes',
+                'string',
+                'regex:/^01\d{9}$/',
+                'unique:users,phone,' . $user->id
+            ],
             'password' => 'sometimes|string|min:8|confirmed',
         ]);
 
         $data = [];
+
         if ($request->has('name')) $data['name'] = $request->name;
         if ($request->has('email')) $data['email'] = $request->email;
         if ($request->has('phone')) $data['phone'] = $request->phone;
@@ -59,21 +70,24 @@ class UserController extends Controller
         ]);
 
         $user->update(['role' => $request->role]);
+
         return $this->success('User role updated successfully', $user);
     }
 
     public function destroy(User $user)
     {
-        $user->delete(); // soft delete
+        $user->delete();
         return $this->deleted('User deleted successfully (soft deleted)');
     }
 
     public function restore($id)
     {
         $user = User::withTrashed()->find($id);
+
         if (!$user) return $this->notFound('User not found');
 
         $user->restore();
+
         return $this->success('User restored successfully', $user);
     }
 }
